@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import random as rd
+
 
 class walkingDot:
     def __init__(self):
@@ -37,7 +39,6 @@ class walkingDot:
                     elif dir == 4 and self.posX[i, j] > -(self.L - 1) / 2:
                         self.posX[i:, j] += -1
                         a = False
-        # return self.posX, self.posY
 
     def getPosition(self, stepNumber):
 
@@ -58,10 +59,17 @@ class walkingDot:
 
         return meanDisplacement
 
-    # def getSTD(self):
+    def getMeanOfAllDisplacement(self):
+        return np.mean(self.getMeanDisplacement())
+
+    def getSTDOfAllDisplacement(self):
+        return np.std(self.getMeanOfAllDisplacement())
 
     def plotMeanDisplacementHist(self):
         meanDisplacement = self.getMeanDisplacement()
+        meanOfAll = np.mean(meanDisplacement)
+        stdOfAll = np.std(meanDisplacement)
+        plt.clf()
         plt.figure(1)
         plt.title('Mean displacement distribution of '+str(self.n)+' dots for '+str(self.N)+' steps \n in a '
                   +str(self.L)+'x'+str(self.L)+' grid.')
@@ -69,16 +77,16 @@ class walkingDot:
         plt.hist(meanDisplacement, bins='auto', density=True, facecolor='g')
         plt.xlabel('Mean displacement [-]')
         plt.ylabel('')
+        plt.legend(['$\mu = $'+'%.2f'%meanOfAll+', $\sigma =$'+'%.2f'%stdOfAll])
         plt.show()
 
-    # def animateTheWalk(self, frame):
+    # def animateTheWalk(self):
 
+if __name__ == '__main__':
+    my_walkingDot = walkingDot()
+    # my_walkingDot.doTheWalk(20000, 500, 101)
+    # my_walkingDot.plotMeanDisplacementHist()
 
-
-# if __name__ == '__main__':
-#     my_walkingDot = walkingDot()
-#     my_walkingDot.doTheWalk(10000, 200, 101)
-#     my_walkingDot.plotMeanDisplacementHist()
-#     my_walkingDot2 = walkingDot()
-#     my_walkingDot2.doTheWalk(10000, 200, 51)
-#     my_walkingDot2.plotMeanDisplacementHist()
+    # my_walkingDot2 = walkingDot()
+    # my_walkingDot2.doTheWalk(5, 100, 101)
+    # my_walkingDot2.plotMeanDisplacementHist()
