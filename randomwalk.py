@@ -12,6 +12,7 @@ class walkingDot:
         self.posX = None # Array for the X position of each dot at each step
         self.posY = None # Array for the Y position of each dot at each step
 
+
     def doTheWalk(self, n:int, N:int, L:int):
         self.n = n
         self.N = N
@@ -52,6 +53,17 @@ class walkingDot:
 
         return posX_atStepNumber, posY_atStepNumber
 
+    def getAllPositionSinceStart(self, stepNumber):
+
+        if stepNumber > self.N:
+            raise ValueError('Step number out of range. Chose a step number between 0 and N')
+
+        posX_sinceStart = self.posX[:stepNumber, :]
+        posY_sinceStart = self.posY[:stepNumber, :]
+        posOfAllPoints = np.vstack(([posX_sinceStart.T], [posY_sinceStart.T])).T
+
+        return  posOfAllPoints
+
     def getMeanDisplacement(self):
 
         finalpos_X, finalpos_Y = self.getPosition(self.N)
@@ -60,12 +72,15 @@ class walkingDot:
         return meanDisplacement
 
     def getMeanOfAllDisplacement(self):
+
         return np.mean(self.getMeanDisplacement())
 
     def getSTDOfAllDisplacement(self):
+
         return np.std(self.getMeanOfAllDisplacement())
 
     def plotMeanDisplacementHist(self):
+
         meanDisplacement = self.getMeanDisplacement()
         meanOfAll = np.mean(meanDisplacement)
         stdOfAll = np.std(meanDisplacement)
@@ -80,13 +95,28 @@ class walkingDot:
         plt.legend(['$\mu = $'+'%.2f'%meanOfAll+', $\sigma =$'+'%.2f'%stdOfAll])
         plt.show()
 
-    # def animateTheWalk(self):
+    def animateT(self, N):
+
+        plt.clf()
+        plt.xlim(-(self.L - 1) / 2, (self.L - 1) / 2)
+        plt.ylim(-(self.L - 1) / 2, (self.L - 1) / 2)
+        vstack = self.getAllPositionSinceStart(N)
+        tree = plt.plot(vstack[0:N][:, 0:self.numberOfDots, 0], vstack[0:N][:, 0:self.numberOfDots, 1])
+        return tree
+
+    def animateTheWalk(self, numberOfDots):
+        self.numberOfDots = numberOfDots
+        fig = plt.figure(1)
+        ani = FuncAnimation(fig, self.animateT, self.N, interval=100)
+        plt.show()
+
 
 if __name__ == '__main__':
-    my_walkingDot = walkingDot()
+    # my_walkingDot = walkingDot()
     # my_walkingDot.doTheWalk(20000, 500, 101)
     # my_walkingDot.plotMeanDisplacementHist()
 
-    # my_walkingDot2 = walkingDot()
-    # my_walkingDot2.doTheWalk(5, 100, 101)
+    my_walkingDot2 = walkingDot()
+    # my_walkingDot2.doTheWalk(100, 250, 101)
     # my_walkingDot2.plotMeanDisplacementHist()
+    # my_walkingDot2.animateTheWalk(2)
