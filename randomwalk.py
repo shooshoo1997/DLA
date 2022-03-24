@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import random as rd
+import time
+import numpy.ma as ma
+
+
 
 
 class walkingDot:
@@ -22,25 +26,30 @@ class walkingDot:
 
         if (self.L % 2) == 0: # If L is an even number
             raise ValueError('The length L of your grid has to be an odd number')
+        
+        def checkposition(v_limite):  # utiliser des masked array ? np.where?
+            check_y = np.abs(self.posY[i, :]) < (self.L - 1) / 2  # en haut ou en bas
+            v_limite = v_limite & check_y
+            check_x = np.abs(self.posX[i, :]) < (self.L - 1) / 2  # droite ou gauche
+            v_limite = v_limite & check_x
+            return v_limite
 
-        for j in range(0, self.n):
-            for i in range(1, self.N + 1):
-                a = True
-                while (a):
-                    dir = rd.randint(1, 4)
-                    if dir == 1 and self.posY[i, j] < (self.L - 1) / 2:
-                        self.posY[i:, j] += 1
-                        a = False
-                    elif dir == 2 and self.posX[i, j] < (self.L - 1) / 2:
-                        self.posX[i:, j] += 1
-                        a = False
-                    elif dir == 3 and self.posY[i, j] > -(self.L - 1) / 2:
-                        self.posY[i:, j] += -1
-                        a = False
-                    elif dir == 4 and self.posX[i, j] > -(self.L - 1) / 2:
-                        self.posX[i:, j] += -1
-                        a = False
+        possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
+        rng = np.random.default_rng()
+        def displacement():  # fonction génératrice à la place ?
+            return rng.choice(possible_displacement, size=self.n, replace=True).T
 
+        vector_limite = np.full((1, self.n), True)
+        for i in range(1, self.N + 1):
+            vector_displacement = displacement()
+            self.posX[i, :] = np.where(np.abs(self.posX[i, :]) > (self.L - 1) / 2, self.posX[i, :], self.posX[i - 1, :] + vector_displacement[0])
+            self.posY[i, :] = np.where(np.abs(self.posY[i, :]) > (self.L - 1) / 2, self.posY[i, :], self.posY[i - 1, :] + vector_displacement[1])
+
+            vector_limite = checkposition(vector_limite)
+            if np.sum(vector_limite) == 0:
+                break
+
+        
     def getPosition(self, stepNumber):
 
         if np.all((self.posX == 0)) is True and np.all((self.posY == 0)) is True:
@@ -107,7 +116,7 @@ class walkingDot:
     def animateTheWalk(self, numberOfDots):
         self.numberOfDots = numberOfDots
         fig = plt.figure(1)
-        ani = FuncAnimation(fig, self.animateT, self.N, interval=100)
+        ani = FuncAnimation(fig, self.animateT, self.N, interval=1)
         plt.show()
 
 
@@ -117,6 +126,6 @@ if __name__ == '__main__':
     # my_walkingDot.plotMeanDisplacementHist()
 
     my_walkingDot2 = walkingDot()
-    # my_walkingDot2.doTheWalk(100, 250, 101)
-    # my_walkingDot2.plotMeanDisplacementHist()
-    # my_walkingDot2.animateTheWalk(2)
+    my_walkingDot2.doTheWalk(100, 250, 101)  # points, nombre de pas, nombre de pixel dans la boîte
+    my_walkingDot2.plotMeanDisplacementHist()
+    my_walkingDot2.animateTheWalk(2)
