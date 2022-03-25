@@ -1,10 +1,11 @@
-from randomwalk import walkingDot
+from randomwalk import WalkingDot
 import time
 
 start = time.time()
-my_walkingDot = walkingDot()
-my_walkingDot.doTheWalk(20000, 500, 101)
-my_walkingDot.plotMeanDisplacementHist()
+my_walkingDot = WalkingDot()
+my_walkingDot.doTheWalk(100000, 1000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
+my_walkingDot.plotXYHist()
+my_walkingDot.plotDisplacementHist()
 end = time.time()
 print(end - start)
-my_walkingDot.animateTheWalk(10)
+anim = my_walkingDot.animateTheWalk(20, 200)
