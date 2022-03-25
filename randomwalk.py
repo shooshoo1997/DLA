@@ -69,13 +69,13 @@ class WalkingDot:
 
         return posX_atStepNumber, posY_atStepNumber
 
-    def getAllPositionSinceStart(self, stepNumber):
+    def getAllPositionSinceStart(self, stepNumber, numberOfDots):
 
         if stepNumber > self.N:
             raise ValueError('Step number out of range. Chose a step number between 0 and N')
 
-        posX_sinceStart = self.posX[:stepNumber, :]
-        posY_sinceStart = self.posY[:stepNumber, :]
+        posX_sinceStart = self.posX[:stepNumber, 0:numberOfDots]
+        posY_sinceStart = self.posY[:stepNumber, 0:numberOfDots]
         posOfAllPoints = np.vstack(([posX_sinceStart.T], [posY_sinceStart.T])).T
 
         return  posOfAllPoints
@@ -100,13 +100,16 @@ class WalkingDot:
 
         Displacement, sigma = self.getDisplacement()
         x = np.linspace(0,1.05*np.max(Displacement), 1000)
-        Rayleigh_dist = x/(sigma**2)*np.exp(-x**2/(2*sigma**2))
-        Rayleigh_mean = sigma*np.sqrt(np.pi/2)
-        Rayleigh_std = np.sqrt((4-np.pi)/2)*sigma
+        sigmaTheo = np.sqrt(self.N/2)
+        Rayleigh_dist = x/(sigmaTheo**2)*np.exp(-x**2/(2*sigmaTheo**2))
+        Rayleigh_mean = sigmaTheo*np.sqrt(np.pi/2)
+        Rayleigh_std = np.sqrt((4-np.pi)/2)*sigmaTheo
         meanOfAll = self.getMeanOfAllDisplacement()
         stdOfAll = self.getSTDOfAllDisplacement()
-        plt.clf()
-        plt.figure(1)
+
+        plt.figure()
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
         plt.title('Displacement distribution of '+str(self.n)+' dots for '+str(self.N)+' steps \n in a '
                   +str(self.L)+'x'+str(self.L)+' grid.')
 
@@ -117,8 +120,40 @@ class WalkingDot:
         plt.legend(['$Rayleigh: \mu = $'+'%.2f'%Rayleigh_mean+', $\sigma =$'+'%.2f'%Rayleigh_std,\
                     '$Data: \mu = $'+'%.2f'%meanOfAll+', $\sigma =$'+'%.2f'%stdOfAll])
         plt.show()
-
+    
+    def plotXYHist(self):
+        
+        finalpos_X, finalpos_Y = self.getPosition(self.N)
+        meanX = np.mean(finalpos_X)
+        meanY = np.mean(finalpos_Y)
+        sigmaX = np.std(finalpos_X)
+        sigmaY = np.std(finalpos_Y)
+        
+        x = np.linspace(1.05*np.min(finalpos_X),1.05*np.max(finalpos_X), 5000)
+        meanTheo = 0
+        sigmaTheo = np.sqrt(self.N/2)
+        Gaussian_dist = 1/np.sqrt(2*np.pi*sigmaTheo**2)*np.exp(-x**2/(2*sigmaTheo**2))
+        
+        fig1, (ax1, ax2) = plt.subplots(1, 2, sharex = 'all')
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        ax1.hist(finalpos_X, bins='sturges', density=True, facecolor='g', label='$Data X: \mu = $'+'%.2f'%meanX+', $\sigma =$'+'%.2f'%sigmaX)
+        ax1.plot(x, Gaussian_dist, label='$Gaussian: \mu = $'+'%.2f'%meanTheo+', $\sigma =$'+'%.2f'%sigmaTheo)
+        ax2.hist(finalpos_X, bins='sturges', density=True, facecolor='r', label='$Data Y: \mu = $'+'%.2f'%meanY+', $\sigma =$'+'%.2f'%sigmaY)
+        ax2.plot(x, Gaussian_dist)
+        # ax2.plot(L, 10*np.log10(abs(gains)))
+        ax2.set_ylabel('Normalized frequency [-]')
+        ax1.set_xlabel("X position [-]")
+        ax2.set_xlabel("Y position [-]")
+        ax1.set_title('Distribution of the final position of the dots in the Xaxis')
+        ax2.set_title('Distribution of the final position of the dots in the Y axis')
+        fig1.legend()
+        # fig1.legend(['$Gaussian: \mu = $'+'%.2f'%meanTheo+', $\sigma =$'+'%.2f'%sigmaTheo,\
+                     # '$Data X: \mu = $'+'%.2f'%meanX+', $\sigma =$'+'%.2f'%sigmaX,'',\
+                    # '$Data Y: \mu = $'+'%.2f'%meanY+', $\sigma =$'+'%.2f'%sigmaY])
+    
     def animateT(self, N):
+        
         tick_spacing = 10
         plt.clf()
         plt.xlim(-(self.L - 1) / 2, (self.L - 1) / 2)
@@ -129,31 +164,35 @@ class WalkingDot:
         plt.grid()
         plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
         plt.gca().yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
-        vstack = self.getAllPositionSinceStart(self.nsteps)
+        vstack = self.getAllPositionSinceStart(self.nsteps, self.numberOfDots)
         plt.gca().set_prop_cycle(plt.cycler('color', plt.cm.jet(np.linspace(0, 1, self.numberOfDots))))
         tree = plt.plot(vstack[N-1:N][:, 0:self.numberOfDots, 0], vstack[N-1:N][:, 0:self.numberOfDots, 1],'o',\
                         vstack[0:N][:, 0:self.numberOfDots, 0], vstack[0:N][:, 0:self.numberOfDots, 1])
             
         return tree
-    
-    def animateTheWalk(self, numberOfDots, nsteps):
+    @beartype
+    def animateTheWalk(self, numberOfDots: int, nsteps: int):
+        if nsteps > self.N:
+            raise ValueError('The number of steps is bigger than the number of steps made by the dots')
+        elif numberOfDots > self.n:
+            raise ValueError('The number of animated dots is bigger than the number of total dots')
+            
         self.nsteps = nsteps
         self.numberOfDots = numberOfDots
-        fig = plt.figure(2)
+        fig = plt.figure()
         figManager = plt.get_current_fig_manager()
         figManager.window.showMaximized()
         plt.clf()
-        anim = FuncAnimation(fig, self.animateT, nsteps, interval=100, repeat=False)
+        anim = FuncAnimation(fig, self.animateT, nsteps, interval=200, repeat=False)
         plt.show()
         return anim
 
 
 if __name__ == '__main__':
-    # my_walkingDot = walkingDot()
-    # my_walkingDot.doTheWalk(20000, 500, 101)
-    # my_walkingDot.plotMeanDisplacementHist()
 
-    my_walkingDot2 = WalkingDot()
-    my_walkingDot2.doTheWalk(1000, 500, 201)  # points, nombre de pas, nombre de pixel dans la boîte
-    my_walkingDot2.plotDisplacementHist()
-    anim = my_walkingDot2.animateTheWalk(10, 200)
+
+    my_walkingDot = WalkingDot()
+    my_walkingDot.doTheWalk(100000, 1000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
+    my_walkingDot.plotXYHist()
+    my_walkingDot.plotDisplacementHist()
+    anim = my_walkingDot.animateTheWalk(20, 1000)
