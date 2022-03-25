@@ -142,11 +142,11 @@ class WalkingDot:
         ax2.hist(finalpos_X, bins='sturges', density=True, facecolor='r', label='$Data Y: \mu = $'+'%.2f'%meanY+', $\sigma =$'+'%.2f'%sigmaY)
         ax2.plot(x, Gaussian_dist)
         # ax2.plot(L, 10*np.log10(abs(gains)))
-        ax2.set_ylabel('Normalized frequency [-]')
+        ax1.set_ylabel('Normalized frequency [-]')
         ax1.set_xlabel("X position [-]")
         ax2.set_xlabel("Y position [-]")
-        ax1.set_title('Distribution of the final position of the dots in the Xaxis')
-        ax2.set_title('Distribution of the final position of the dots in the Y axis')
+        ax1.set_title('Distribution of the final position of the dots on the Xaxis')
+        ax2.set_title('Distribution of the final position of the dots on the Y axis')
         fig1.legend()
         # fig1.legend(['$Gaussian: \mu = $'+'%.2f'%meanTheo+', $\sigma =$'+'%.2f'%sigmaTheo,\
                      # '$Data X: \mu = $'+'%.2f'%meanX+', $\sigma =$'+'%.2f'%sigmaX,'',\
@@ -160,7 +160,7 @@ class WalkingDot:
         plt.ylim(-(self.L - 1) / 2, (self.L - 1) / 2)
         plt.xlabel('X axis [-]')
         plt.ylabel('Y axis [-]')
-        plt.title('Random walk of '+ str(self.numberOfDots)+' dots' +' for '+ str(self.N) + ' steps')
+        plt.title('Random walk of '+ str(self.numberOfDots)+' dots' +' for '+ str(self.nsteps) + ' steps')
         plt.grid()
         plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
         plt.gca().yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
@@ -195,4 +195,4 @@ if __name__ == '__main__':
     my_walkingDot.doTheWalk(100000, 1000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
     my_walkingDot.plotXYHist()
     my_walkingDot.plotDisplacementHist()
-    anim = my_walkingDot.animateTheWalk(20, 1000)
+    anim = my_walkingDot.animateTheWalk(20, 200)
