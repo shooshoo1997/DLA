@@ -17,7 +17,7 @@ class walkingDot:
         self.posY = None # Array for the Y position of each dot at each step
 
 
-    def doTheWalk(self, n:int, N:int, L:int):
+    def doTheWalk(self, n, N, L):
         self.n = n
         self.N = N
         self.L = L
@@ -36,7 +36,9 @@ class walkingDot:
 
         possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
         rng = np.random.default_rng()
-        def displacement():  # fonction génératrice à la place ?
+
+        def displacement():
+
             return rng.choice(possible_displacement, size=self.n, replace=True).T
 
         vector_limite = np.full((1, self.n), True)
@@ -126,6 +128,6 @@ if __name__ == '__main__':
     # my_walkingDot.plotMeanDisplacementHist()
 
     my_walkingDot2 = walkingDot()
-    my_walkingDot2.doTheWalk(100, 250, 101)  # points, nombre de pas, nombre de pixel dans la boîte
+    my_walkingDot2.doTheWalk(100000, 20000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
     my_walkingDot2.plotMeanDisplacementHist()
-    my_walkingDot2.animateTheWalk(2)
+    my_walkingDot2.animateTheWalk(5)
