@@ -41,11 +41,11 @@ class WalkingDot:
         if (self.L % 2) == 0:  # If L is an even number
             raise ValueError('The length L of your grid has to be an odd number')
 
-        possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
+        self.possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
 
         # vector_limite = np.full((1, self.n), True)
         for i in range(1, self.N + 1):
-            vector_displacement = self.displacement(possible_displacement)
+            vector_displacement = self.displacement(self.possible_displacement)
             self.posX[i, :] = self.posX[i - 1, :] + vector_displacement[0]
             self.posY[i, :] = self.posY[i - 1, :] + vector_displacement[1]
             self.posX[i, :] = np.where((-1*(self.L - 1) / 2 <= self.posX[i, :]) & (self.posX[i, :] <= (self.L - 1) / 2), self.posX[i, :],
