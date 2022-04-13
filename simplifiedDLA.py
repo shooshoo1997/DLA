@@ -1,7 +1,7 @@
-from randomwalk import walkingDot
+from randomwalk import WalkingDot
 
 
-class DLA(walkingDot):
+class DLA(WalkingDot):
     pass
 
 
