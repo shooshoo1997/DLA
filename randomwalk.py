@@ -18,12 +18,12 @@ class WalkingDot:
         self.posX = None  # Array for the X position of each dot at each step
         self.posY = None  # Array for the Y position of each dot at each step
 
-    def checkposition(self, v_limite, i):  # utiliser des masked array ? np.where?
-        check_y = np.abs(self.posY[i, :]) < (self.L - 1) / 2  # en haut ou en bas
-        v_limite = v_limite & check_y
-        check_x = np.abs(self.posX[i, :]) < (self.L - 1) / 2  # droite ou gauche
-        v_limite = v_limite & check_x
-        return v_limite
+    # def checkposition(self, v_limite, i):  # utiliser des masked array ? np.where?
+    #     check_y = np.abs(self.posY[i, :]) < (self.L - 1) / 2  # en haut ou en bas
+    #     v_limite = v_limite & check_y
+    #     check_x = np.abs(self.posX[i, :]) < (self.L - 1) / 2  # droite ou gauche
+    #     v_limite = v_limite & check_x
+    #     return v_limite
 
     def displacement(self, possible_displacement):  # fonction génératrice à la place ?
         rng = np.random.default_rng()
@@ -43,17 +43,19 @@ class WalkingDot:
 
         possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
 
-        vector_limite = np.full((1, self.n), True)
+        # vector_limite = np.full((1, self.n), True)
         for i in range(1, self.N + 1):
             vector_displacement = self.displacement(possible_displacement)
-            self.posX[i, :] = np.where(np.abs(self.posX[i, :]) > (self.L - 1) / 2, self.posX[i, :],
-                                       self.posX[i - 1, :] + vector_displacement[0])
-            self.posY[i, :] = np.where(np.abs(self.posY[i, :]) > (self.L - 1) / 2, self.posY[i, :],
-                                       self.posY[i - 1, :] + vector_displacement[1])
+            self.posX[i, :] = self.posX[i - 1, :] + vector_displacement[0]
+            self.posY[i, :] = self.posY[i - 1, :] + vector_displacement[1]
+            self.posX[i, :] = np.where((-1*(self.L - 1) / 2 <= self.posX[i, :]) & (self.posX[i, :] <= (self.L - 1) / 2), self.posX[i, :],
+                                       self.posX[i-1, :])
+            self.posY[i, :] = np.where((-1*(self.L - 1) / 2 <= self.posY[i, :]) & (self.posY[i, :] <= (self.L - 1) / 2), self.posY[i, :],
+                                       self.posY[i-1, :])
 
-            vector_limite = self.checkposition(vector_limite, i)
-            if np.sum(vector_limite) == 0:
-                break
+            # vector_limite = self.checkposition(vector_limite, i)
+            # if np.sum(vector_limite) == 0:
+            #     break
 
     def getPosition(self, stepNumber):
 
@@ -114,7 +116,8 @@ class WalkingDot:
         plt.plot(x, Rayleigh_dist)
         plt.xlabel('Displacement [-]')
         plt.ylabel('Normalized frequency')
-        plt.legend(['$Rayleigh: \mu = $' + '%.2f' % Rayleigh_mean + ', $\sigma =$' + '%.2f' % Rayleigh_std, '$Data: \mu = $' + '%.2f' % meanOfAll + ', $\sigma =$' + '%.2f' % stdOfAll])
+        plt.legend(['$Rayleigh: \mu = $' + '%.2f' % Rayleigh_mean + ', $\sigma =$' + '%.2f' % Rayleigh_std,
+                    '$Data: \mu = $' + '%.2f' % meanOfAll + ', $\sigma =$' + '%.2f' % stdOfAll])
         plt.show()
 
     def plotXYHist(self):
@@ -154,8 +157,14 @@ class WalkingDot:
 
         tick_spacing = 10
         plt.clf()
-        plt.xlim(-(self.L - 1) / 2, (self.L - 1) / 2)
-        plt.ylim(-(self.L - 1) / 2, (self.L - 1) / 2)
+        plt.xlim(-(self.L - 1) / 2 - 10, (self.L - 1) / 2 + 10)
+        plt.ylim(-(self.L - 1) / 2 - 10, (self.L - 1) / 2 + 10)
+        # plt.xlim(-10, 10)
+        # plt.ylim((-10, 10))
+        plt.axhline(y=(self.L - 1) / 2, color='red')
+        plt.axhline(y=-(self.L - 1) / 2, color='red')
+        plt.axvline(x=-(self.L - 1) / 2, color='red')
+        plt.axvline(x=(self.L - 1) / 2, color='red')
         plt.xlabel('X axis [-]')
         plt.ylabel('Y axis [-]')
         plt.title('Random walk of ' + str(self.numberOfDots) + ' dots' + ' for ' + str(self.nsteps) + ' steps')
@@ -164,7 +173,8 @@ class WalkingDot:
         plt.gca().yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
         vstack = self.getAllPositionSinceStart(self.nsteps, self.numberOfDots)
         plt.gca().set_prop_cycle(plt.cycler('color', plt.cm.jet(np.linspace(0, 1, self.numberOfDots))))
-        tree = plt.plot(vstack[N - 1:N][:, 0:self.numberOfDots, 0], vstack[N - 1:N][:, 0:self.numberOfDots, 1], 'o', vstack[0:N][:, 0:self.numberOfDots, 0], vstack[0:N][:, 0:self.numberOfDots, 1])
+        tree = plt.plot(vstack[N - 1:N][:, 0:self.numberOfDots, 0], vstack[N - 1:N][:, 0:self.numberOfDots, 1], 'o',
+                        vstack[0:N][:, 0:self.numberOfDots, 0], vstack[0:N][:, 0:self.numberOfDots, 1])
 
         return tree
 
@@ -189,7 +199,7 @@ if __name__ == '__main__':
 
 
     my_walkingDot = WalkingDot()
-    my_walkingDot.doTheWalk(100000, 2000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
+    my_walkingDot.doTheWalk(100000, 1000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
     my_walkingDot.plotXYHist()
     my_walkingDot.plotDisplacementHist()
-    anim = my_walkingDot.animateTheWalk(20, 200)
+    anim = my_walkingDot.animateTheWalk(10, 1000)
