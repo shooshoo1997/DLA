@@ -33,18 +33,18 @@ class DLA:
             startingPlane = rd.randint(0, 3)
             alongPlane = rd.randint(-1*(self.L - 1)/2, (self.L - 1)/2)
             if startingPlane == 0:
-                return alongPlane, (self.L - 1)/2
+                return alongPlane, (self.L - 1)/2, self.L
             elif startingPlane == 2:
-                return alongPlane, -1*(self.L - 1)/2
+                return alongPlane, -1*(self.L - 1)/2, self.L
             elif startingPlane == 1:
-                return (self.L - 1)/2, alongPlane
+                return (self.L - 1)/2, alongPlane, self.L
             elif startingPlane == 3:
-                return -1*(self.L - 1)/2, alongPlane
+                return -1*(self.L - 1)/2, alongPlane, self.L
         elif np.size(self.endPosition) == 2:
             newL = np.max(np.abs(self.endPosition)) - 1
             # print(newL)
             newTheta = rd.randint(0, 359)
-            return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta)))
+            return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta))), abs(newL)
 
         else:
             maxMatrice = np.amax(np.abs(self.endPosition), axis=1)
@@ -54,13 +54,13 @@ class DLA:
             if newL < 0:
                 return 0, 0
             else:
-                return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta)))
+                return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta))), abs(newL)
 
     def doParcour(self):
 
-        # self.posX, self.posY = self.getStartingPoint() # Cette section uncommented pour utiliser l'algo accéléré (spoiler: ne fonctionne pas vraiment)
-        self.posX = 0 # Cette section commented pour utiliser l'algo accéléré
-        self.posY = 0 # Cette section commented pour utiliser l'algo accéléré
+        self.posX, self.posY, newL = self.getStartingPoint() # Cette section uncommented pour utiliser l'algo accéléré (spoiler: ne fonctionne pas vraiment)
+        # self.posX = 0 # Cette section commented pour utiliser l'algo accéléré
+        # self.posY = 0 # Cette section commented pour utiliser l'algo accéléré
         canMove = True
 
         while(canMove):
@@ -80,13 +80,14 @@ class DLA:
                     self.posX = self.posX - vector_displacement[0]
                     self.posY = self.posY - vector_displacement[1]
 
-            if self.endPosition is not None:
+            elif self.endPosition is not None:
                 if [self.posX, self.posY] in self.endPosition.tolist():
                     canMove = False
                     self.endPosition = np.vstack([self.endPosition, [self.posX - vector_displacement[0], self.posY - vector_displacement[1]]])
                     self.posX = self.posX - vector_displacement[0]
                     self.posY = self.posY - vector_displacement[1]
-
+            elif int(np.sqrt(self.posY**2 + self.posX**2)) < int(newL/2):
+                canMove = False
 
     def doDLA(self, L):
 
@@ -108,6 +109,7 @@ class DLA:
 
         L = self.L - 1
         plt.figure(1)
+        plt.style.use('dark_background')
         plt.title('Carrée de '+str(self.L)+'x'+str(self.L))
         plt.axvline(x=(-L / 2), ymax=0.05, ymin=0.95, color='black')
         plt.axvline(x=(L / 2), ymax=0.05, ymin=0.95, color='black')
@@ -125,15 +127,6 @@ class DLA:
 
 if __name__ == '__main__':
 
-    # L = 10
     my_DLA = DLA()
-    positions = my_DLA.doDLA(51)
+    positions = my_DLA.doDLA(21)
     my_DLA.plotBrownianTree()
-
-    # plt.figure(1)
-    # plt.axvline(x=(-L /2), ymax=L/2, ymin= -L / 2)
-    # plt.axvline(x=(L / 2), ymax=L / 2, ymin= -L / 2)
-    # plt.axhline(y=(-L / 2), xmax=L / 2, xmin= -L / 2)
-    # plt.axhline(y=(L / 2), xmax=L / 2, xmin= -L / 2)
-    # plt.plot(positions[:, 0], positions[:, 1], 'o')
-    # plt.show()
