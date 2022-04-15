@@ -1,12 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 import random as rd
-import time
-import numpy.ma as ma
-from beartype import beartype
-import matplotlib.ticker as ticker
-# from randomwalk import WalkingDot
 
 
 class DLA:
@@ -32,10 +26,41 @@ class DLA:
 
         return boolX, boolY
 
+    def getStartingPoint(self):
+
+        # startingPlane = rd.randint(0, 3)
+        if self.endPosition is None:
+            startingPlane = rd.randint(0, 3)
+            alongPlane = rd.randint(-1*(self.L - 1)/2, (self.L - 1)/2)
+            if startingPlane == 0:
+                return alongPlane, (self.L - 1)/2
+            elif startingPlane == 2:
+                return alongPlane, -1*(self.L - 1)/2
+            elif startingPlane == 1:
+                return (self.L - 1)/2, alongPlane
+            elif startingPlane == 3:
+                return -1*(self.L - 1)/2, alongPlane
+        elif np.size(self.endPosition) == 2:
+            newL = np.max(np.abs(self.endPosition)) - 1
+            # print(newL)
+            newTheta = rd.randint(0, 359)
+            return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta)))
+
+        else:
+            maxMatrice = np.amax(np.abs(self.endPosition), axis=1)
+            newL = np.min(maxMatrice) - 1
+            # print(newL)
+            newTheta = rd.randint(0, 359)
+            if newL < 0:
+                return 0, 0
+            else:
+                return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta)))
+
     def doParcour(self):
 
-        self.posX = 0
-        self.posY = 0
+        # self.posX, self.posY = self.getStartingPoint() # Cette section uncommented pour utiliser l'algo accéléré (spoiler: ne fonctionne pas vraiment)
+        self.posX = 0 # Cette section commented pour utiliser l'algo accéléré
+        self.posY = 0 # Cette section commented pour utiliser l'algo accéléré
         canMove = True
 
         while(canMove):
@@ -81,18 +106,28 @@ class DLA:
 
     def plotBrownianTree(self):
 
+        L = self.L - 1
         plt.figure(1)
-
-        plt.scatter(self.endPosition[:, 0], self.endPosition[:, 1], s=10, c=np.linspace(0, len(self.endPosition), len(self.endPosition)),
-                    cmap='rainbow')
+        plt.title('Carrée de '+str(self.L)+'x'+str(self.L))
+        plt.axvline(x=(-L / 2), ymax=0.05, ymin=0.95, color='black')
+        plt.axvline(x=(L / 2), ymax=0.05, ymin=0.95, color='black')
+        plt.axhline(y=(-L / 2), xmax=0.05, xmin=0.95, color='black')
+        plt.axhline(y=(L / 2), xmax=0.05, xmin=0.95, color='black')
+        orig_map = plt.cm.get_cmap('rainbow')
+        reversed_map = orig_map.reversed()
+        c = np.linspace(0, len(self.endPosition), len(self.endPosition))
+        plt.scatter(self.endPosition[:, 0], self.endPosition[:, 1], s=10, c=c[::-1],
+                    cmap=reversed_map)
+        plt.colorbar(label='Âge [itération]')
         plt.show()
+
 
 
 if __name__ == '__main__':
 
-    L = 50
+    # L = 10
     my_DLA = DLA()
-    positions = my_DLA.doDLA(L+1)
+    positions = my_DLA.doDLA(51)
     my_DLA.plotBrownianTree()
 
     # plt.figure(1)
