@@ -139,7 +139,7 @@ class WalkingDot:
         else:
             raise ValueError(methode + ' is not a valid method. Chose between gaussian and uniform.')
 
-    def plotXYHist(self):
+    def plotXYHist(self, methode:str):
 
         finalpos_X, finalpos_Y = self.getPosition(self.N)
         meanX = np.mean(finalpos_X)
@@ -147,27 +147,60 @@ class WalkingDot:
         sigmaX = np.std(finalpos_X)
         sigmaY = np.std(finalpos_Y)
 
-        x = np.linspace(1.05 * np.min(finalpos_X), 1.05 * np.max(finalpos_X), 5000)
-        meanTheo = 0
-        sigmaTheo = np.sqrt(self.N / 2)
-        Gaussian_dist = 1 / np.sqrt(2 * np.pi * sigmaTheo ** 2) * np.exp(-x ** 2 / (2 * sigmaTheo ** 2))
+        if methode == 'gaussian':
+            x = np.linspace(1.05 * np.min(finalpos_X), 1.05 * np.max(finalpos_X), 5000)
+            meanTheo = 0
+            sigmaTheo = np.sqrt(self.N / 2)
+            Gaussian_dist = 1 / np.sqrt(2 * np.pi * sigmaTheo ** 2) * np.exp(-x ** 2 / (2 * sigmaTheo ** 2))
 
-        fig1, (ax1) = plt.subplots()
-        fig2, (ax2) = plt.subplots()
-        ax1.hist(finalpos_X, bins='sturges', density=True, facecolor='g',
-                 label='$Data X: \mu = $' + '%.2f' % meanX + ', $\sigma =$' + '%.2f' % sigmaX)
-        ax1.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
-        ax2.hist(finalpos_X, bins='sturges', density=True, facecolor='r',
-                 label='$Data Y: \mu = $' + '%.2f' % meanY + ', $\sigma =$' + '%.2f' % sigmaY)
-        ax2.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
-        ax1.set_ylabel('Normalized frequency [-]')
-        ax1.set_xlabel("X position [-]")
-        ax2.set_xlabel("Y position [-]")
-        ax1.set_title('Distribution of the final position of the dots on the Xaxis')
-        ax2.set_title('Distribution of the final position of the dots on the Y axis')
-        fig1.legend()
-        fig2.legend()
-        plt.show()
+            fig1, (ax1) = plt.subplots()
+            fig2, (ax2) = plt.subplots()
+            ax1.hist(finalpos_X, bins='sturges', density=True, facecolor='g',
+                     label='$Data X: \mu = $' + '%.2f' % meanX + ', $\sigma =$' + '%.2f' % sigmaX)
+            ax1.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
+            ax2.hist(finalpos_X, bins='sturges', density=True, facecolor='r',
+                     label='$Data Y: \mu = $' + '%.2f' % meanY + ', $\sigma =$' + '%.2f' % sigmaY)
+            ax2.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
+            ax1.set_ylabel('Normalized frequency [-]')
+            ax1.set_xlabel("X position [-]")
+            ax2.set_xlabel("Y position [-]")
+            ax1.set_title('Distribution of the final position of the dots on the Xaxis')
+            ax2.set_title('Distribution of the final position of the dots on the Y axis')
+            fig1.legend()
+            fig2.legend()
+            plt.show()
+
+        if methode == 'uniform':
+            x = np.linspace(1.05 * np.min(finalpos_X), 1.05 * np.max(finalpos_X), 5000)
+            meanTheo = 0
+            sigmaTheo = np.sqrt(self.N / 2)
+            sigmaTheo_unif = self.L/np.sqrt(12)
+            unif_Theo = 1/self.L
+            Gaussian_dist = 1 / np.sqrt(2 * np.pi * sigmaTheo ** 2) * np.exp(-x ** 2 / (2 * sigmaTheo ** 2))
+            unif_dist = np.full((5000), unif_Theo)
+
+            fig1, (ax1) = plt.subplots()
+            fig2, (ax2) = plt.subplots()
+            ax1.hist(finalpos_X, bins='auto', density=True, facecolor='g',
+                     label='$Data X: \mu = $' + '%.2f' % meanX + ', $\sigma =$' + '%.2f' % sigmaX)
+            ax1.plot(x, Gaussian_dist,
+                     label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
+            ax1.plot(x, unif_dist,
+                     label='$Uniforme: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo_unif, color='black')
+            ax2.hist(finalpos_X, bins='auto', density=True, facecolor='r',
+                     label='$Data Y: \mu = $' + '%.2f' % meanY + ', $\sigma =$' + '%.2f' % sigmaY)
+            ax2.plot(x, Gaussian_dist,
+                     label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
+            ax2.plot(x, unif_dist,
+                     label='$Uniforme: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo_unif, color='black')
+            ax1.set_ylabel('Normalized frequency [-]')
+            ax1.set_xlabel("X position [-]")
+            ax2.set_xlabel("Y position [-]")
+            ax1.set_title('Distribution of the final position of the dots on the Xaxis')
+            ax2.set_title('Distribution of the final position of the dots on the Y axis')
+            fig1.legend()
+            fig2.legend()
+            plt.show()
 
     def animateT(self, N):
 
@@ -211,7 +244,7 @@ if __name__ == '__main__':
 
 
     my_walkingDot = WalkingDot()
-    my_walkingDot.doTheWalk(100000, 500, 101) # 100 000 billes, 500 pas, boite de 101x101
-    my_walkingDot.plotXYHist()
-    my_walkingDot.plotDisplacementHist('uniform')
+    my_walkingDot.doTheWalk(100000, 1, 51) # 100 000 billes, 500 pas, boite de 101x101
+    my_walkingDot.plotXYHist('gaussian')
+    my_walkingDot.plotDisplacementHist('gaussian')
     my_walkingDot.animateTheWalk(10, 200)      # animation de 10 billes pour 200 pas

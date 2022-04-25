@@ -16,7 +16,7 @@ minute = int((stop - start)/60)
 seconde = (((stop - start)/60)%1)*60
 print('Runtime: '+str(minute)+' minutes  {:.0f} secondes'.format(seconde))
 
-my_walkingDot.plotXYHist()
+my_walkingDot.plotXYHist('gaussian')           # Choix: "gaussian", "uniform"
 my_walkingDot.plotDisplacementHist('gaussian') # Choix: "gaussian", "uniform"
 my_walkingDot.animateTheWalk(10, 200)          # Animation 10 billes pour 200 pas
 
