@@ -9,9 +9,11 @@ class DLA:
 
         self.possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
         self.L = None
+        self.n = 1
         self.posX = 0  # Array for the X position of each dot at each step
         self.posY = 0  # Array for the Y position of each dot at each step
         self.endPosition = None
+        self.listIter = []
 
     def displacement(self, possible_displacement):
 
@@ -19,60 +21,35 @@ class DLA:
 
         return rng.choice(possible_displacement).T
 
-    def checkLimitBreak(self, posX, posY):
+    def getMask(self, posX, posY):
 
-        boolX = np.where((-1*(self.L - 1) / 2 <= posX) & (posX <= (self.L - 1) / 2), True, False)
-        boolY = np.where((-1*(self.L - 1) / 2 <= posY) & (posY <= (self.L - 1) / 2), True, False)
 
-        return boolX, boolY
-
-    def getStartingPoint(self):
-
-        # startingPlane = rd.randint(0, 3)
-        if self.endPosition is None:
-            startingPlane = rd.randint(0, 3)
-            alongPlane = rd.randint(-1*(self.L - 1)/2, (self.L - 1)/2)
-            if startingPlane == 0:
-                return alongPlane, (self.L - 1)/2, self.L
-            elif startingPlane == 2:
-                return alongPlane, -1*(self.L - 1)/2, self.L
-            elif startingPlane == 1:
-                return (self.L - 1)/2, alongPlane, self.L
-            elif startingPlane == 3:
-                return -1*(self.L - 1)/2, alongPlane, self.L
-        elif np.size(self.endPosition) == 2:
-            newL = np.max(np.abs(self.endPosition)) - 1
-            # print(newL)
-            newTheta = rd.randint(0, 359)
-            return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta))), abs(newL)
-
-        else:
-            maxMatrice = np.amax(np.abs(self.endPosition), axis=1)
-            newL = np.min(maxMatrice) - 1
-            # print(newL)
-            newTheta = rd.randint(0, 359)
-            if newL < 0:
-                return 0, 0
-            else:
-                return int(abs(newL) * np.cos(np.radians(newTheta))), int(abs(newL) * np.sin(np.radians(newTheta))), abs(newL)
+        boolX_limit = np.where((-1 * (self.L - 1) / 2 <= posX) & (posX <= (self.L - 1) / 2), True, False)
+        boolY_limit = np.where((-1 * (self.L - 1) / 2 <= posY) & (posY <= (self.L - 1) / 2), True, False)
+        return boolX_limit, boolY_limit
 
     def doParcour(self):
 
-        self.posX, self.posY, newL = self.getStartingPoint() # Cette section uncommented pour utiliser l'algo accéléré (spoiler: ne fonctionne pas vraiment)
-        # self.posX = 0 # Cette section commented pour utiliser l'algo accéléré
-        # self.posY = 0 # Cette section commented pour utiliser l'algo accéléré
+        self.posX = 0
+        self.posY = 0
+
         canMove = True
 
         while(canMove):
-
             vector_displacement = self.displacement(self.possible_displacement)
-            self.posX += vector_displacement[0]
-            self.posY += vector_displacement[1]
-            limitSate = self.checkLimitBreak(self.posX, self.posY)
+            displacement_X = vector_displacement[0]
+            displacement_Y = vector_displacement[1]
+
+            self.posX += displacement_X
+            self.posY += displacement_Y
+
+            limitSate = self.getMask(self.posX, self.posY)
+
             if (limitSate[0] == False or limitSate[1] == False) == True :
                 canMove = False
                 if self.endPosition is None:
                     self.endPosition = np.array([self.posX - vector_displacement[0], self.posY - vector_displacement[1]])
+                    self.endPosition = self.endPosition[np.newaxis]
                     self.posX = self.posX - vector_displacement[0]
                     self.posY = self.posY - vector_displacement[1]
                 else:
@@ -81,13 +58,13 @@ class DLA:
                     self.posY = self.posY - vector_displacement[1]
 
             elif self.endPosition is not None:
-                if [self.posX, self.posY] in self.endPosition.tolist():
+                pos = self.posX+self.posY*1j
+                endPos = self.endPosition[:, 0] + self.endPosition[:, 1]*1j
+                if np.in1d(pos, endPos):
                     canMove = False
                     self.endPosition = np.vstack([self.endPosition, [self.posX - vector_displacement[0], self.posY - vector_displacement[1]]])
                     self.posX = self.posX - vector_displacement[0]
                     self.posY = self.posY - vector_displacement[1]
-            elif int(np.sqrt(self.posY**2 + self.posX**2)) < int(newL/2):
-                canMove = False
 
     def doDLA(self, L):
 
@@ -100,16 +77,16 @@ class DLA:
 
         while(canMove):
             self.doParcour()
-            if self.posY == 0 and self.posX == 0:
+
+            if self.posY**2 + self.posX**2 == 0:
                 canMove = False
 
-        return self.endPosition
+        return self.endPosition, self.listIter
 
     def plotBrownianTree(self):
 
         L = self.L - 1
         plt.figure(1)
-        plt.style.use('dark_background')
         plt.title('Carrée de '+str(self.L)+'x'+str(self.L))
         plt.axvline(x=(-L / 2), ymax=0.05, ymin=0.95, color='black')
         plt.axvline(x=(L / 2), ymax=0.05, ymin=0.95, color='black')
@@ -128,5 +105,5 @@ class DLA:
 if __name__ == '__main__':
 
     my_DLA = DLA()
-    positions = my_DLA.doDLA(21)
+    positions = my_DLA.doDLA(101) # Simulation avec L = 101
     my_DLA.plotBrownianTree()

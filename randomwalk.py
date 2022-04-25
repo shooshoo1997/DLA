@@ -1,9 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import random as rd
-import time
-import numpy.ma as ma
 from beartype import beartype
 import matplotlib.ticker as ticker
 
@@ -18,18 +15,12 @@ class WalkingDot:
         self.posX = None  # Array for the X position of each dot at each step
         self.posY = None  # Array for the Y position of each dot at each step
 
-    # def checkposition(self, v_limite, i):  # utiliser des masked array ? np.where?
-    #     check_y = np.abs(self.posY[i, :]) < (self.L - 1) / 2  # en haut ou en bas
-    #     v_limite = v_limite & check_y
-    #     check_x = np.abs(self.posX[i, :]) < (self.L - 1) / 2  # droite ou gauche
-    #     v_limite = v_limite & check_x
-    #     return v_limite
 
-    def displacement(self, possible_displacement):  # fonction génératrice à la place ?
+    def displacement(self, possible_displacement):
         rng = np.random.default_rng()
         return rng.choice(possible_displacement, size=self.n, replace=True).T
 
-    @beartype  # Vérifie les types d'arguments, souvlève un exception si type est pas bon
+    @beartype
     def doTheWalk(self, n: int, N: int, L: int):
 
         self.n = n
@@ -38,12 +29,11 @@ class WalkingDot:
         self.posX = np.zeros((self.N + 1, self.n))
         self.posY = np.zeros((self.N + 1, self.n))
 
-        if (self.L % 2) == 0:  # If L is an even number
+        if (self.L % 2) == 0:
             raise ValueError('The length L of your grid has to be an odd number')
 
         self.possible_displacement = np.array([[0, 1], [0, -1], [1, 0], [-1, 0]])
 
-        # vector_limite = np.full((1, self.n), True)
         for i in range(1, self.N + 1):
             vector_displacement = self.displacement(self.possible_displacement)
             self.posX[i, :] = self.posX[i - 1, :] + vector_displacement[0]
@@ -53,9 +43,6 @@ class WalkingDot:
             self.posY[i, :] = np.where((-1*(self.L - 1) / 2 <= self.posY[i, :]) & (self.posY[i, :] <= (self.L - 1) / 2), self.posY[i, :],
                                        self.posY[i-1, :])
 
-            # vector_limite = self.checkposition(vector_limite, i)
-            # if np.sum(vector_limite) == 0:
-            #     break
 
     def getPosition(self, stepNumber):
 
@@ -95,30 +82,62 @@ class WalkingDot:
 
         return np.std(self.getDisplacement()[0])
 
-    def plotDisplacementHist(self):
+    def plotDisplacementHist(self, methode:str):
 
-        Displacement, sigma = self.getDisplacement()
-        x = np.linspace(0, 1.05 * np.max(Displacement), 1000)
-        sigmaTheo = np.sqrt(self.N / 2)
-        Rayleigh_dist = x / (sigmaTheo ** 2) * np.exp(-x ** 2 / (2 * sigmaTheo ** 2))
-        Rayleigh_mean = sigmaTheo * np.sqrt(np.pi / 2)
-        Rayleigh_std = np.sqrt((4 - np.pi) / 2) * sigmaTheo
-        meanOfAll = self.getMeanOfAllDisplacement()
-        stdOfAll = self.getSTDOfAllDisplacement()
+        if methode == 'gaussian':
 
-        plt.figure()
-        # figManager = plt.get_current_fig_manager()
-        # figManager.window.showMaximized()
-        plt.title('Displacement distribution of ' + str(self.n) + ' dots for ' + str(self.N) + ' steps \n in a '
-                  + str(self.L) + 'x' + str(self.L) + ' grid.')
+            Displacement, sigma = self.getDisplacement()
+            x = np.linspace(0, 1.05 * np.max(Displacement), 1000)
+            sigmaTheo = np.sqrt(self.N / 2)
+            Rayleigh_dist = x / (sigmaTheo ** 2) * np.exp(-x ** 2 / (2 * sigmaTheo ** 2))
+            Rayleigh_mean = sigmaTheo * np.sqrt(np.pi / 2)
+            Rayleigh_std = np.sqrt((4 - np.pi) / 2) * sigmaTheo
+            meanOfAll = self.getMeanOfAllDisplacement()
+            stdOfAll = self.getSTDOfAllDisplacement()
 
-        plt.hist(Displacement, bins='sturges', density=True, facecolor='g')
-        plt.plot(x, Rayleigh_dist)
-        plt.xlabel('Displacement [-]')
-        plt.ylabel('Normalized frequency')
-        plt.legend(['$Rayleigh: \mu = $' + '%.2f' % Rayleigh_mean + ', $\sigma =$' + '%.2f' % Rayleigh_std,
-                    '$Data: \mu = $' + '%.2f' % meanOfAll + ', $\sigma =$' + '%.2f' % stdOfAll])
-        plt.show()
+            plt.figure()
+            plt.title('Displacement distribution of ' + str(self.n) + ' dots for ' + str(self.N) + ' steps \n in a '
+                      + str(self.L) + 'x' + str(self.L) + ' grid.')
+
+            plt.hist(Displacement, bins='sturges', density=True, facecolor='g')
+            plt.plot(x, Rayleigh_dist)
+            plt.xlabel('Displacement [-]')
+            plt.ylabel('Normalized frequency')
+            plt.legend(['$Rayleigh: \mu = $' + '%.2f' % Rayleigh_mean + ', $\sigma =$' + '%.2f' % Rayleigh_std,
+                        '$Data: \mu = $' + '%.2f' % meanOfAll + ', $\sigma =$' + '%.2f' % stdOfAll])
+            plt.show()
+
+        elif methode == 'uniform':
+
+            Displacement, sigma = self.getDisplacement()
+            x = np.linspace(0, np.sqrt(2)*((self.L-1)/2), 1000)
+            unif_dist = np.zeros((1, 1000))
+            for i, j in enumerate(x):
+                if 0 <= j < ((self.L-1)/2):
+                    unif_dist[0, i] = (1/(((self.L-1)/2)**2))* (np.pi/2) * j
+                elif ((self.L-1)/2) <= j <= np.sqrt(2)*((self.L-1)/2):
+                    unif_dist[0, i] = (1 / (((self.L - 1) / 2) ** 2)) * (np.pi/2 - 2*np.arccos(((self.L-1)/2)/j)) * j
+
+            norm_Factor = np.sum(unif_dist)
+            theo_Dist = np.sum(x[np.newaxis] * unif_dist/norm_Factor)
+            unif_mean = theo_Dist
+            unif_std = np.sqrt(np.sum((x[np.newaxis] - theo_Dist)**2 * unif_dist/norm_Factor))
+            meanOfAll = self.getMeanOfAllDisplacement()
+            stdOfAll = self.getSTDOfAllDisplacement()
+
+            plt.figure()
+            plt.title('Displacement distribution of ' + str(self.n) + ' dots for ' + str(self.N) + ' steps \n in a '
+                      + str(self.L) + 'x' + str(self.L) + ' grid.')
+
+            plt.hist(Displacement, bins='sturges', density=True, facecolor='g')
+            plt.plot(x[np.newaxis].T, unif_dist.T)
+            plt.xlabel('Displacement [-]')
+            plt.ylabel('Normalized frequency')
+            plt.legend(['$Theorical: \mu = $' + '%.2f' % unif_mean + ', $\sigma =$' + '%.2f' % unif_std,
+                        '$Data: \mu = $' + '%.2f' % meanOfAll + ', $\sigma =$' + '%.2f' % stdOfAll])
+            plt.show()
+        else:
+            raise ValueError(methode + ' is not a valid method. Chose between gaussian and uniform.')
 
     def plotXYHist(self):
 
@@ -133,25 +152,22 @@ class WalkingDot:
         sigmaTheo = np.sqrt(self.N / 2)
         Gaussian_dist = 1 / np.sqrt(2 * np.pi * sigmaTheo ** 2) * np.exp(-x ** 2 / (2 * sigmaTheo ** 2))
 
-        fig1, (ax1, ax2) = plt.subplots(1, 2, sharex='all')
-        # figManager = plt.get_current_fig_manager()
-        # figManager.window.showMaximized()
+        fig1, (ax1) = plt.subplots()
+        fig2, (ax2) = plt.subplots()
         ax1.hist(finalpos_X, bins='sturges', density=True, facecolor='g',
                  label='$Data X: \mu = $' + '%.2f' % meanX + ', $\sigma =$' + '%.2f' % sigmaX)
         ax1.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
         ax2.hist(finalpos_X, bins='sturges', density=True, facecolor='r',
                  label='$Data Y: \mu = $' + '%.2f' % meanY + ', $\sigma =$' + '%.2f' % sigmaY)
-        ax2.plot(x, Gaussian_dist)
-        # ax2.plot(L, 10*np.log10(abs(gains)))
+        ax2.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
         ax1.set_ylabel('Normalized frequency [-]')
         ax1.set_xlabel("X position [-]")
         ax2.set_xlabel("Y position [-]")
         ax1.set_title('Distribution of the final position of the dots on the Xaxis')
         ax2.set_title('Distribution of the final position of the dots on the Y axis')
         fig1.legend()
-        # fig1.legend(['$Gaussian: \mu = $'+'%.2f'%meanTheo+', $\sigma =$'+'%.2f'%sigmaTheo,\
-        # '$Data X: \mu = $'+'%.2f'%meanX+', $\sigma =$'+'%.2f'%sigmaX,'',\
-        # '$Data Y: \mu = $'+'%.2f'%meanY+', $\sigma =$'+'%.2f'%sigmaY])
+        fig2.legend()
+        plt.show()
 
     def animateT(self, N):
 
@@ -159,8 +175,6 @@ class WalkingDot:
         plt.clf()
         plt.xlim(-(self.L - 1) / 2 - 10, (self.L - 1) / 2 + 10)
         plt.ylim(-(self.L - 1) / 2 - 10, (self.L - 1) / 2 + 10)
-        # plt.xlim(-10, 10)
-        # plt.ylim((-10, 10))
         plt.axhline(y=(self.L - 1) / 2, color='red')
         plt.axhline(y=-(self.L - 1) / 2, color='red')
         plt.axvline(x=-(self.L - 1) / 2, color='red')
@@ -188,10 +202,8 @@ class WalkingDot:
         self.nsteps = nsteps
         self.numberOfDots = numberOfDots
         fig = plt.figure()
-        # figManager = plt.get_current_fig_manager()
-        # figManager.window.showMaximized()
         plt.clf()
-        anim = FuncAnimation(fig, self.animateT, nsteps, interval=200, repeat=False)
+        anim = FuncAnimation(fig, self.animateT, nsteps, interval=1, repeat=False)
         plt.show()
         return anim
 
@@ -199,7 +211,7 @@ if __name__ == '__main__':
 
 
     my_walkingDot = WalkingDot()
-    my_walkingDot.doTheWalk(100000, 1000, 101)  # points, nombre de pas, nombre de pixel dans la boîte
+    my_walkingDot.doTheWalk(100000, 500, 101) # 100 000 billes, 500 pas, boite de 101x101
     my_walkingDot.plotXYHist()
-    my_walkingDot.plotDisplacementHist()
-    anim = my_walkingDot.animateTheWalk(10, 1000)
+    my_walkingDot.plotDisplacementHist('uniform')
+    my_walkingDot.animateTheWalk(10, 200)      # animation de 10 billes pour 200 pas

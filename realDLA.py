@@ -66,6 +66,7 @@ class DLA:
     def doDLA(self, L):
 
         self.L = L
+        self.rFactor = 3
 
         if (self.L % 2) == 0:  # If L is an even number
             raise ValueError('The length L of your grid has to be an odd number')
@@ -73,32 +74,34 @@ class DLA:
         canMove = True
 
         while(canMove):
-            percent = (1 - (self.newL/((self.L-1)/3)))*100
+            percent = (1 - (self.newL/((self.L-1)/self.rFactor)))*100
             print('{:.0f}% left'.format(percent))
             self.doParcour()
-            if self.newL > (self.L - 1) / 3:
+            if self.newL > (self.L - 1) /self.rFactor:
                 canMove = False
                 print('Done')
 
         return self.endPosition
 
-    def plotBrownianTree(self):
+    def plotBrownianTree(self, filepath=None):
 
         L = self.L - 1
         plt.figure(1)
         plt.style.use('dark_background')
-        plt.title('Carrée de '+str(self.L)+'x'+str(self.L))
-        plt.axvline(x=(-L / 2), ymax=0.05, ymin=0.95, color='black')
-        plt.axvline(x=(L / 2), ymax=0.05, ymin=0.95, color='black')
-        plt.axhline(y=(-L / 2), xmax=0.05, xmin=0.95, color='black')
-        plt.axhline(y=(L / 2), xmax=0.05, xmin=0.95, color='black')
+        plt.title('Carrée de '+str(self.L)+'x'+str(self.L), color='black')
+        plt.axvline(x=(-L / 2), ymax=0.05, ymin=0.95, color='white')
+        plt.axvline(x=(L / 2), ymax=0.05, ymin=0.95, color='white')
+        plt.axhline(y=(-L / 2), xmax=0.05, xmin=0.95, color='white')
+        plt.axhline(y=(L / 2), xmax=0.05, xmin=0.95, color='white')
         orig_map = plt.cm.get_cmap('rainbow')
         reversed_map = orig_map.reversed()
         c = np.linspace(0, len(self.endPosition), len(self.endPosition))
-        plt.scatter(self.endPosition[:, 0], self.endPosition[:, 1], s=8, c=c[::-1],
+        plt.scatter(self.endPosition[:, 0], self.endPosition[:, 1], s=((self.L-1)/self.rFactor)/np.sqrt(self.endPosition[:, 0]**2 + self.endPosition[:, 1]**2), c=c[::-1],
                     cmap=reversed_map)
         plt.colorbar(label='Âge [itération]')
         plt.show()
+        if filepath is not None:
+            plt.savefig(filepath, dpi=300)
 
 
 if __name__ == '__main__':
