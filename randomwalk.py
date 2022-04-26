@@ -155,10 +155,10 @@ class WalkingDot:
 
             fig1, (ax1) = plt.subplots()
             fig2, (ax2) = plt.subplots()
-            ax1.hist(finalpos_X, bins='sturges', density=True, facecolor='g',
+            ax1.hist(finalpos_X, bins=self.L, density=True, facecolor='g',
                      label='$Data X: \mu = $' + '%.2f' % meanX + ', $\sigma =$' + '%.2f' % sigmaX)
             ax1.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
-            ax2.hist(finalpos_X, bins='sturges', density=True, facecolor='r',
+            ax2.hist(finalpos_Y, bins=self.L, density=True, facecolor='r',
                      label='$Data Y: \mu = $' + '%.2f' % meanY + ', $\sigma =$' + '%.2f' % sigmaY)
             ax2.plot(x, Gaussian_dist, label='$Gaussian: \mu = $' + '%.2f' % meanTheo + ', $\sigma =$' + '%.2f' % sigmaTheo)
             ax1.set_ylabel('Normalized frequency [-]')
@@ -244,7 +244,7 @@ if __name__ == '__main__':
 
 
     my_walkingDot = WalkingDot()
-    my_walkingDot.doTheWalk(100000, 500, 101) # 100 000 billes, 500 pas, boite de 101x101
-    my_walkingDot.plotXYHist('uniform')
-    my_walkingDot.plotDisplacementHist('uniform')
-    my_walkingDot.animateTheWalk(10, 200)      # animation de 10 billes pour 200 pas
+    my_walkingDot.doTheWalk(100000, 500, 101)      # 100 000 billes, 500 pas, boite de 101x101
+    my_walkingDot.plotXYHist('gaussian')           # Choix: 'gaussian' ou 'uniform'
+    my_walkingDot.plotDisplacementHist('gaussian') # Choix: 'gaussian' ou 'uniform'
+    my_walkingDot.animateTheWalk(10, 200)          # animation de 10 billes pour 200 pas
